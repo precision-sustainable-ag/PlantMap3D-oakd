@@ -13,10 +13,10 @@ def dirsetup():
 
 # arguments
 argn = argparse.ArgumentParser()
-argn.add_argument('-n', type=int, default=6)
-argn.add_argument('-iso', type=int, default=1000)
-argn.add_argument('-fps', type=int, default=5)
-argn.add_argument('-ss', type=int, default=30000)
+argn.add_argument('-n', type=int, default=10)
+argn.add_argument('-iso', type=int, default=500)
+argn.add_argument('-fps', type=int, default=1) # 0.25, 0.5
+argn.add_argument('-ss', type=int, default=1) # in milli secs
 args = argn.parse_args()
 
 
@@ -76,6 +76,8 @@ def manualExposure(expTimeMs, sensIso):
 
 def set_fps_and_focus(fps):
 	camRgb.setFps(fps)
+	monoRight.setFps(fps)
+	monoLeft.setFps(fps)
 	videoEnc.setFrameRate(fps)
 
 
@@ -92,28 +94,31 @@ with dai.Device(pipeline) as device:
 	qStill = device.getOutputQueue(name="still", maxSize=4, blocking=True)
 	qControl = device.getInputQueue(name="control")
 	# iso and shutter speed
-	# manualExposure(args.ss, args.iso)
-  # fps
-  # set_fps_and_focus(args.fps)
+	manualExposure(args.ss, args.iso)
+  	# fps
+  	set_fps_and_focus(args.fps)
 
 	ctrl = dai.CameraControl()
 	ctrl.setCaptureStill(True)
+		
+	while(i<n):
+        	inRgb = qRGB.tryGet()
+        	u += 1
 
-	while(i<n*2):
-		inRgb = qRGB.tryGet()
-		t = str(int(time.time()))
+        	if(u==15):
+            		qControl.send(ctrl)
+            		u = 0
 
-		if qStill.has():
-			fName = f"{dirName}/{t}_Rgb.png"
-			with open(fName, "wb") as f:
-				f.write(qStill.get().getData())
+        	if qStill.has():
+            		t = str(int(time.time()))
+            		fName = f"{dirName}/{t}_Rgb.png"
+            		with open(fName, "wb") as f:
+                		f.write(qStill.get().getData())
 
-			inRight = qRight.get()
-			cv2.imwrite(f"{dirName}/{t}_Right.png", inRight.getFrame())
+            		inRight = qRight.get()
+            		cv2.imwrite(f"{dirName}/{t}_Right.png", inRight.getFrame())
 
-			inLeft = qLeft.get()
-			cv2.imwrite(f"{dirName}/{t}_Left.png", inLeft.getFrame())
-
-		qControl.send(ctrl)
-		i += 1
-		time.sleep(1)
+            		inLeft = qLeft.get()
+            		cv2.imwrite(f"{dirName}/{t}_Left.png", inLeft.getFrame())
+            		i += 1
+            		time.sleep(0.1)
