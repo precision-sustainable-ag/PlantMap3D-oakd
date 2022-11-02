@@ -14,10 +14,10 @@ def dirsetup():
 
 ## arguments
 argn = argparse.ArgumentParser()
-argn.add_argument('-n', type=int, default=2)      # number of images to collect
-argn.add_argument('-iso', type=int, default=1000)   # iso of images
+argn.add_argument('-n', type=int, default=5)      # number of images to collect
+argn.add_argument('-iso', type=int, default=400)   # iso of images
 argn.add_argument('-fps', type=float, default=1)    # fps of camera
-argn.add_argument('-ss', type=float, default=8)   # shutter speed of camera in milliseconds
+argn.add_argument('-ss', type=float, default=1)   # shutter speed of camera in milliseconds
 args = argn.parse_args()
 
 
@@ -72,8 +72,8 @@ xin = pipeline.create(dai.node.XLinkIn)
 xin.setMaxDataSize(1)
 xin.setStreamName("control")
 xin.out.link(camRgb.inputControl)
-xin.out.link(monoLeft.inputControl)
-xin.out.link(monoRight.inputControl)
+# xin.out.link(monoLeft.inputControl)
+# xin.out.link(monoRight.inputControl)
 
 
 def set_ss_iso(expTimeMs, sensIso):
@@ -91,15 +91,13 @@ def set_fps(fps):
 
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:	
-    i = 0
-    # image count
-    n = args.n
+    n = args.n      # image count
     dirsetup()
     init_dsp = (255 / Depth.initialConfig.getMaxDisparity())
 
     qRight = device.getOutputQueue(name="right", maxSize=2, blocking=False)
     qLeft = device.getOutputQueue(name="left", maxSize=2, blocking=False)
-    qRGB = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
+    qRGB = device.getOutputQueue(name="rgb", maxSize=2, blocking=False)
     qDepth = device.getOutputQueue(name="disparity", maxSize=2, blocking=False)
     qControl = device.getInputQueue(name="control")
 
@@ -109,27 +107,30 @@ with dai.Device(pipeline) as device:
     set_fps(args.fps)
 
     for r in range(30):
-        inRgb = qRGB.get()
-        inRight = qRight.get()
-        inLeft = qLeft.get()
-        inDepth = qDepth.get()
+        c, r, l, d = qRGB.get(), qRight.get(), qLeft.get(), qDepth.get()
 
     print("Started")
     start = time.time()
 
+    i = 0
     while(i<n):
-        inRgb = qRGB.get()
-        inRight = qRight.get()
-        inLeft = qLeft.get()
-        inDepth = qDepth.get()
-        cv2.imwrite(f"{dirName}/{i+1}_Rgb.png", inRgb.getCvFrame())
-        cv2.imwrite(f"{dirName}/{i+1}_Right.png", inRight.getFrame())
-        cv2.imwrite(f"{dirName}/{i+1}_Left.png", inLeft.getFrame())
-        dframe = inDepth.getFrame()
-        dframe = (dframe * init_dsp).astype(np.uint8)
-        cv2.imwrite(f"{dirName}/{i+1}_Depth.png", dframe)
+        t = str(time.time())
 
+        inRgb = qRGB.tryGet()
+        inRight = qRight.tryGet()
+        inLeft = qLeft.tryGet()
+        inDepth = qDepth.tryGet()
+        if inRgb is not None:
+            cv2.imwrite(f"{dirName}/{t}_Rgb.png", inRgb.getCvFrame())
+        if inRight is not None:
+            cv2.imwrite(f"{dirName}/{t}_Right.png", inRight.getFrame())
+        if inLeft is not None:
+            cv2.imwrite(f"{dirName}/{t}_Left.png", inLeft.getFrame())
+        if inDepth is not None:
+            dframe = inDepth.getFrame()
+            dframe = (dframe * init_dsp).astype(np.uint8)
+            cv2.imwrite(f"{dirName}/{t}_Depth.png", dframe)
+        
         i += 1
-
 
 print("Finished in", round(time.time()-start, 2))
