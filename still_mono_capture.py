@@ -4,9 +4,10 @@ import time
 from pathlib import Path
 import cv2
 import depthai as dai
+from datetime import date
 
-
-dirName = "oak_images"
+today = str(date.today())
+dirName = "images_"+today
 def dirsetup():
     Path(dirName).mkdir(parents=True, exist_ok=True)
 
@@ -14,7 +15,7 @@ def dirsetup():
 # arguments
 argn = argparse.ArgumentParser()
 argn.add_argument('-n', type=int, default=10)
-argn.add_argument('-iso', type=int, default=1000)
+argn.add_argument('-iso', type=int, default=400)
 argn.add_argument('-fps', type=float, default=0.25) # 0.25, 0.5
 argn.add_argument('-ss', type=float, default=1) # in milli secs
 args = argn.parse_args()
@@ -36,10 +37,6 @@ xoutRgb = pipeline.create(dai.node.XLinkOut)
 xoutRgb.setStreamName("rgb")
 camRgb.video.link(xoutRgb.input)
 
-xin = pipeline.create(dai.node.XLinkIn)
-xin.setStreamName("control")
-xin.out.link(camRgb.inputControl)
-
 # Properties
 videoEnc = pipeline.create(dai.node.VideoEncoder)
 videoEnc.setDefaultProfilePreset(1, dai.VideoEncoderProperties.Profile.MJPEG)
@@ -58,13 +55,19 @@ monoRight.setBoardSocket(dai.CameraBoardSocket.RIGHT)
 monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
 monoRight.out.link(xoutRight.input)
 
-
 monoLeft = pipeline.create(dai.node.MonoCamera)
 xoutLeft = pipeline.create(dai.node.XLinkOut)
 xoutLeft.setStreamName("left")
 monoLeft.setBoardSocket(dai.CameraBoardSocket.LEFT)
 monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
 monoLeft.out.link(xoutLeft.input)
+
+xin = pipeline.create(dai.node.XLinkIn)
+xin.setStreamName("control")
+xin.setMaxDataSize(1)
+xin.out.link(camRgb.inputControl)
+xin.out.link(monoLeft.inputControl)
+xin.out.link(monoRight.inputControl)
 
 
 def manualExposure(expTimeMs, sensIso):
@@ -129,4 +132,4 @@ with dai.Device(pipeline) as device:
             inLeft = qLeft.get()
             cv2.imwrite(f"{dirName}/{t}_Left.png", inLeft.getFrame())
             i += 1
-            time.sleep(1)
+            time.sleep(0.1)
