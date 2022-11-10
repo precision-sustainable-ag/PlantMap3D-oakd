@@ -19,7 +19,8 @@ argn.add_argument('-iso', type=int, default=400)   # iso of images
 argn.add_argument('-fps', type=float, default=1)    # fps of camera
 argn.add_argument('-ss', type=float, default=1)   # shutter speed of camera in milliseconds
 args = argn.parse_args()
-
+mono_ss = 1000
+mono_iso = 100
 
 ## Create pipeline
 pipeline = dai.Pipeline()
@@ -68,19 +69,26 @@ monoRight.out.link(Depth.right)
 monoLeft.out.link(Depth.left)
 Depth.disparity.link(xoutDepth.input)
 
-xin = pipeline.create(dai.node.XLinkIn)
-xin.setMaxDataSize(1)
-xin.setStreamName("control")
-xin.out.link(camRgb.inputControl)
-# xin.out.link(monoLeft.inputControl)
-# xin.out.link(monoRight.inputControl)
+xin1 = pipeline.create(dai.node.XLinkIn)
+xin1.setMaxDataSize(1)
+xin1.setStreamName("controlr")
+xin1.out.link(camRgb.inputControl)
+
+xin2 = pipeline.create(dai.node.XLinkIn)
+xin2.setMaxDataSize(1)
+xin2.setStreamName("controlm")
+xin2.out.link(monoLeft.inputControl)
+xin2.out.link(monoRight.inputControl)
 
 
 def set_ss_iso(expTimeMs, sensIso):
     expTimeUs = int(round(expTimeMs * 1000))
-    ctrl = dai.CameraControl()
-    ctrl.setManualExposure(expTimeUs, sensIso)
-    qControl.send(ctrl)
+    ctr1 = dai.CameraControl()
+    ctr2 = dai.CameraControl()
+    ctr1.setManualExposure(expTimeUs, sensIso)
+    qControl1.send(ctr1)
+    ctr2.setManualExposure(mono_ss, mono_iso)
+    qControl2.send(ctr2)
 
 
 def set_fps(fps):
@@ -95,11 +103,12 @@ with dai.Device(pipeline) as device:
     dirsetup()
     init_dsp = (255 / Depth.initialConfig.getMaxDisparity())
 
-    qRight = device.getOutputQueue(name="right", maxSize=2, blocking=False)
-    qLeft = device.getOutputQueue(name="left", maxSize=2, blocking=False)
-    qRGB = device.getOutputQueue(name="rgb", maxSize=2, blocking=False)
-    qDepth = device.getOutputQueue(name="disparity", maxSize=2, blocking=False)
-    qControl = device.getInputQueue(name="control")
+    qRight = device.getOutputQueue(name="right", maxSize=5, blocking=False)
+    qLeft = device.getOutputQueue(name="left", maxSize=5, blocking=False)
+    qRGB = device.getOutputQueue(name="rgb", maxSize=5, blocking=False)
+    qDepth = device.getOutputQueue(name="disparity", maxSize=5, blocking=False)
+    qControl1 = device.getInputQueue(name="controlr")
+    qControl2 = device.getInputQueue(name="controlm")
 
     # iso and shutter speed
     set_ss_iso(args.ss, args.iso)
