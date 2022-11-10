@@ -15,12 +15,12 @@ def dirsetup():
 ## arguments
 argn = argparse.ArgumentParser()
 argn.add_argument('-n', type=int, default=5)      # number of images to collect
-argn.add_argument('-iso', type=int, default=400)   # iso of images
-argn.add_argument('-fps', type=float, default=1)    # fps of camera
-argn.add_argument('-ss', type=float, default=1)   # shutter speed of camera in milliseconds
+argn.add_argument('-iso', type=int, default=400)   # iso of color camera
+argn.add_argument('-fps', type=float, default=1)    # fps of all cameras
+argn.add_argument('-ss', type=float, default=1)   # shutter speed of color camera in milliseconds
+argn.add_argument('-miso', type=int, default=150)   # iso of mono camera
 args = argn.parse_args()
 mono_ss = 1000
-mono_iso = 100
 
 ## Create pipeline
 pipeline = dai.Pipeline()
@@ -87,7 +87,7 @@ def set_ss_iso(expTimeMs, sensIso):
     ctr2 = dai.CameraControl()
     ctr1.setManualExposure(expTimeUs, sensIso)
     qControl1.send(ctr1)
-    ctr2.setManualExposure(mono_ss, mono_iso)
+    ctr2.setManualExposure(mono_ss, args.miso)
     qControl2.send(ctr2)
 
 
