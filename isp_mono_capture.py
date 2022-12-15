@@ -110,7 +110,7 @@ def setFocusMode(option):
    ctrl = dai.CameraControl()
    if option==1: ctrl.setAutoFocusMode(dai.CameraControl.AutoFocusMode.AUTO)
    else: ctrl.setAutoFocusMode(dai.CameraControl.AutoFocusMode.CONTINUOUS_PICTURE)
-   ctrl = dai.CameraControl()
+   qControl1.send(ctrl)
  
  
 # Connect to device and start pipeline
