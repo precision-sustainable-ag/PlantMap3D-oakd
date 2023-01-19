@@ -190,8 +190,11 @@ with dai.Device(pipeline) as device:
            cv2.imwrite(f"{dirName}/{t}_Depth.png", dframe)
        
        if( time.time()-stamp > 1 ) and frame is not None:
-           iso, ss = adjust_exposure(frame, iso, ss, True)
-           miso, mss = adjust_exposure(inRight.getFrame(), miso, mss, False)
+           if frame is not None:
+               iso, ss = adjust_exposure(frame, iso, ss, True)
+           if inRight is not None:
+               frm = inRight.getFrame()
+               miso, mss = adjust_exposure(frm, miso, mss, False)
            stamp = time.time()
       
 print("Finished in", round(time.time()-start, 2))

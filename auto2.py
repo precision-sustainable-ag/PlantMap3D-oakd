@@ -1,5 +1,6 @@
 import argparse
 import time
+import math
 from pathlib import Path
 import cv2
 import depthai as dai
@@ -20,8 +21,10 @@ argn.add_argument('-fmode', type=int, default=0)    # focus mode of camera (0 fo
 argn.add_argument('-focus', type=int, default=-1)   # focus of color camera (0 for far to 255 for near)
 argn.add_argument('-focusf', type=int, default=129)   # far
 argn.add_argument('-focusn', type=int, default=145)   # near
+argn.add_argument('-top', type=int, default=128)
+argn.add_argument('-bottom', type=int, default=104)
 args = argn.parse_args()
- 
+
 ## Create pipeline
 pipeline = dai.Pipeline()
  
@@ -87,6 +90,8 @@ xin2.out.link(monoRight.inputControl)
 
 ISO = [100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600]
 SS = [313, 400, 500, 625, 800, 1000]
+T = math.ceil(args.top/8) - 1
+B = math.ceil(args.bottom/8) - 1
     
 def adjust_exposure(img, i, s, col):
     ctr1 = dai.CameraControl()
@@ -99,9 +104,9 @@ def adjust_exposure(img, i, s, col):
     peak = np.max(hist)
     pos = np.where(hist == peak)[0][0]
 
-    if pos not in range(12, 15): # 104 to 128 range
+    if pos not in range(B, T): # 104 to 128 range by default
         # increase iso or ss
-        if( pos < 12):
+        if( pos < B):
             if s == len(SS)-1:
                 i = min(i+1, 12)
             else:
@@ -117,7 +122,7 @@ def adjust_exposure(img, i, s, col):
         else:
             qControl2.send(ctr1)
     
-    print(SS[s], ISO[i])
+    # print(SS[s], ISO[i])
     return i, s
  
 
@@ -191,9 +196,13 @@ with dai.Device(pipeline) as device:
            dframe = (dframe * init_dsp).astype(np.uint8)
            cv2.imwrite(f"{dirName}/{t}_Depth.png", dframe)
        
-       if( time.time()-stamp > 1 ) and frame is not None:
-           iso, ss = adjust_exposure(frame, iso, ss, True)
-           miso, mss = adjust_exposure(inRight.getFrame(), miso, mss, False)
+       if( time.time()-stamp > 1 ):
+           if frame is not None:
+               iso, ss = adjust_exposure(frame, iso, ss, True)
+           if inRight is not None:
+               frm = inRight.getFrame()
+               miso, mss = adjust_exposure(frm, miso, mss, False)
            stamp = time.time()
+       
       
 print("Finished in", round(time.time()-start, 2))
