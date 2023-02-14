@@ -18,7 +18,6 @@ def dirsetup():
 ## arguments
 argn = argparse.ArgumentParser()
 argn.add_argument('-n', type=int, default=5)      # number of images to collect
-argn.add_argument('-fps', type=float, default=1)    # fps of all cameras
 argn.add_argument('-fmode', type=int, default=0)    # focus mode of camera (0 for default setting)
 argn.add_argument('-focus', type=int, default=-1)   # focus of color camera (0 for far to 255 for near)
 argn.add_argument('-focusf', type=int, default=129)   # far
