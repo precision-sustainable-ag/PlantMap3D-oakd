@@ -40,8 +40,8 @@ img_dict_c = {
 	"key":"Image",
 	"type": "RGB",
 	"data":{
-		"length":12257280,
-		"width":4032,
+		"length":12330240,
+		"width":4056,
 		"height":3040,
 		"pixels":[]
 	},
