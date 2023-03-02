@@ -194,22 +194,26 @@ for p in range(1):
                                 imOut = queue.get().getCvFrame()
                                 prv_dict["data"]["pixels"] = imOut.tolist()
                                 j_p = json.dumps(prv_dict)
-                            if(c_key == "RGB"):
+
+                            if(c_key == "TakeSnapshot"):
                                 inRgb = qRGB.get().getData()
-                                img_dict_c["data"]["pixels"] = inRgb.tolist()
-                                j_p = json.dumps(img_dict_c)
-                            if(c_key == "MonoLeft"):
                                 inLeft = qLeft.get().getFrame()
-                                img_dict_l["data"]["pixels"] = inLeft.tolist()
-                                j_p = json.dumps(img_dict_l)
-                            if(c_key == "MonoRight"):
                                 inRight = qRight.get().getFrame()
-                                img_dict_r["data"]["pixels"] = inRight.tolist()
-                                j_p = json.dumps(img_dict_r)
-                            if(c_key == "Depth"):
                                 inDepth = qDepth.get().getFrame()
+                                img_dict_c["data"]["pixels"] = inRgb.tolist()
+                                img_dict_l["data"]["pixels"] = inLeft.tolist()
+                                img_dict_r["data"]["pixels"] = inRight.tolist()
                                 dframe = (inDepth * init_dsp).astype(np.uint8)
                                 img_dict_d["data"]["pixels"] = dframe.tolist()
+                                continue
+
+                            if(c_key == "RGB"):
+                                j_p = json.dumps(img_dict_c)
+                            if(c_key == "MonoLeft"):
+                                j_p = json.dumps(img_dict_l)
+                            if(c_key == "MonoRight"):
+                                j_p = json.dumps(img_dict_r)
+                            if(c_key == "Depth"):
                                 j_p = json.dumps(img_dict_d)
 
                             try:
