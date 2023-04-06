@@ -105,7 +105,7 @@ Depth = pipeline.create(dai.node.StereoDepth)
 Depth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
 Depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
 Depth.setLeftRightCheck(True)
-Depth.setExtendedDisparity(True)
+Depth.setExtendedDisparity(False)
 if args.subpixel>0: Depth.setSubpixel(True)
 else:   Depth.setSubpixel(False)
 
