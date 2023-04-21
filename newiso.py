@@ -33,7 +33,7 @@ pipeline = dai.Pipeline()
 camRgb = pipeline.create(dai.node.ColorCamera)
 camRgb.setBoardSocket(dai.CameraBoardSocket.RGB)
 camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_12_MP)
-camRgb.setNumFramesPool(2,2,0,0,1)
+# camRgb.setNumFramesPool(3,3,0,0,1)
 camRgb.initialControl.setSharpness(0)     # range: 0..4, default: 1    
 camRgb.initialControl.setLumaDenoise(0)   # range: 0..4, default: 1    
 camRgb.initialControl.setChromaDenoise(4) # range: 0..4, default: 1
